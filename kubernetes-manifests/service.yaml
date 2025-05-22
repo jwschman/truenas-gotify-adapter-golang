@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: truenas-gotify
+  namespace: truenas-gotify
+spec:
+  selector:
+    app: truenas-gotify
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    port: 31662
+    targetPort: 31662

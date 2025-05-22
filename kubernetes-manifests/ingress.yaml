@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: truenas-gotify
+  namespace: truenas-gotify
+spec:
+  ingressClassName: internal # edit to match your ingress class
+  tls:
+  - hosts:
+    - truenas-gotify.pawked.com # edit to match your desired hostname
+  rules:
+  - host: truenas-gotify.pawked.com # edit to match your desired hostname
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: truenas-gotify
+            port:
+              number: 31662
