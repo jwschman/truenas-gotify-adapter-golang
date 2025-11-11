@@ -9,16 +9,20 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"pawked.com/truenas-gotify-adapter/metrics"
 )
 
 // get necessary environment variables
 var (
-	gotifyURL   = os.Getenv("GOTIFY_URL")
-	gotifyToken = os.Getenv("GOTIFY_TOKEN")
-	listenHost  = os.Getenv("LISTEN_HOST")
-	listenPort  = os.Getenv("LISTEN_PORT")
+	gotifyURL     = os.Getenv("GOTIFY_URL")
+	gotifyToken   = os.Getenv("GOTIFY_TOKEN")
+	listenHost    = os.Getenv("LISTEN_HOST")
+	listenPort    = os.Getenv("LISTEN_PORT")
+	enableMetrics = os.Getenv("PROMETHEUS_METRICS") == "1" // set to true if the env is set to 1
 )
 
 // set up some structs to make things simpler
@@ -44,6 +48,12 @@ func main() {
 	r.POST("/", onMessageHandler)
 	r.POST("/message", onMessageHandler)
 
+	// turn on prometheus metrics if enabled in env
+	if enableMetrics {
+		metrics.Register()
+		r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+	}
+
 	// build listen address
 	listenAddress := fmt.Sprintf("%s:%s", listenHost, listenPort)
 
@@ -57,11 +67,22 @@ func main() {
 // Gin handler for both routes
 func onMessageHandler(c *gin.Context) {
 
+	// get the total time to handle a message (even on fail)
+	start := time.Now()
+	defer func() {
+		duration := time.Since(start).Seconds()
+		metrics.RequestDuration.Observe(duration)
+	}()
+
+	//increment the number of messages received
+	metrics.RequestsTotal.Inc()
+
 	// read the content of the alert
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		log.Println("Error: Couldn't read request body:", err)
 		c.Status(http.StatusBadRequest) // return error to TrueNAS
+		metrics.RequestsFailedTotal.Inc()
 		return
 	}
 
@@ -70,6 +91,7 @@ func onMessageHandler(c *gin.Context) {
 	if err := json.Unmarshal(body, &request); err != nil || request.Text == "" { // check if error or more importantly, missing text field
 		log.Println("Error: Request has invalid JSON or missing 'text' field:", err)
 		c.Status(http.StatusBadRequest) // also return 400 on error or missing text field
+		metrics.RequestsFailedTotal.Inc()
 		return
 	}
 
@@ -94,6 +116,7 @@ func onMessageHandler(c *gin.Context) {
 	if err != nil {
 		log.Println("Error forwarding to Gotify:", err)
 		c.Status(http.StatusInternalServerError) // return 500 to TrueNAS on error
+		metrics.GotifySendsFailedTotal.Inc()     // increment failed counter
 		return
 	}
 
@@ -112,6 +135,11 @@ func onMessageHandler(c *gin.Context) {
 
 // Forwards GotifyPayload to Gotify
 func sendGotifyMessage(payload GotifyPayload) (*http.Response, error) {
+
+	metrics.GotifySendsTotal.Inc() // increment sends counter
+
+	start := time.Now() // start time for request
+
 	// prepare io.Reader body for http.NewRequest
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
@@ -131,6 +159,10 @@ func sendGotifyMessage(payload GotifyPayload) (*http.Response, error) {
 
 	// send request and return response
 	resp, err := http.DefaultClient.Do(req)
+
+	// get time for response
+	duration := time.Since(start).Seconds()      // time since the start of the send
+	metrics.GotifySendDuration.Observe(duration) // Observe records it into the histogram
 	if err != nil {
 		return nil, err
 	}
