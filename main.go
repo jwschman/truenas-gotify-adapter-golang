@@ -52,6 +52,9 @@ func main() {
 	if enableMetrics {
 		metrics.Register()
 		r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+		log.Printf("Prometheus metrics will be served on /metrics\n")
+	} else {
+		log.Printf("Prometheus metrics are disabled")
 	}
 
 	// build listen address
