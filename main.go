@@ -98,6 +98,9 @@ func onMessageHandler(c *gin.Context) {
 		return
 	}
 
+	// print entire bdy to log (for testing at the monent, I'm looking for the severity)
+	log.Printf("Received payload:\n\n%s", string(body))
+
 	// extract notification title and message from alert
 	lines := strings.Split(request.Text, "\n")                  // split Text at newline
 	title := strings.TrimSpace(lines[0])                        // title is string 0 without whitespace
