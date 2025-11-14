@@ -6,6 +6,8 @@ This program uses TrueNAS CORE's built-in Slack alert service to send notificati
 
 > **NOTE**: Slack is not necessary to run this program and is not used for anything in this guide.
 
+✨ **Now with Prometheus /metrics!** ✨
+
 ## Setup
 
 ### 1: Generate Gotify Token
@@ -32,6 +34,8 @@ The program can be run on its own in Docker (or whatever container engine you pr
 | `GOTIFY_TOKEN` | The Gotify application token you created earlier | \<token> |
 | `LISTEN_HOST` | The IP address this program listens on | 0.0.0.0 |
 | `LISTEN_PORT` | The port this program listens on | 31662 |
+| `PROMETHEUS_METRICS` | Collect and serve prometheus metrics on /metrics | `0` for disabled, `1` for enabled |
+| `DEBUG_MODE` | Enable debug mode | `0` for disabled, `1` for enabled |
 
 #### Example `docker run` command
 
@@ -42,6 +46,8 @@ docker run -d \
   -e LISTEN_HOST="0.0.0.0" \
   -e LISTEN_PORT="31662" \
   -p 31662:31662 \
+  -e PROMETHEUS_METRICS="1"
+  -e DEBUG_MODE="0"
   jwschman/truenas-gotify:main
 ```
 
@@ -65,12 +71,7 @@ That's it.  You're good to go 😎
 
 ## TODO
 
-- Checks for if environment variables are set
-- Builtin default values for LISTEN_HOST and LISTEN_PORT if not supplied
-- Add checks if GOTIFY_URL is correct
-- Add tags to images
-
-But honestly it's kind of fine how it is.
+- Add tags to dockerhub images in github workflow
 
 ## About
 
