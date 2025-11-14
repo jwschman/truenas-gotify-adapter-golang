@@ -25,8 +25,12 @@ spec:
         - name: GOTIFY_URL
           value: "https://gotify.pawked.com/message"
         - name: GOTIFY_TOKEN
-          value: <gotify-token> # Add your own here
+          value: <gotify-token> # Add your own here or use a secret containing it
         - name: LISTEN_HOST
           value: "0.0.0.0"
         - name: LISTEN_PORT
-          value: "31662"
+          value: "31662"  # This should match the container port
+        - name: PROMETHEUS_METRICS
+          value: "1"
+        - name: DEBUG_MODE
+          value: "0"

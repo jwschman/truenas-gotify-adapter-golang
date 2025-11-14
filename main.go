@@ -26,6 +26,25 @@ var (
 	enableDebug   = os.Getenv("DEBUG_MODE") == "1"
 )
 
+// check for environment variables at startup and set to reasonable values if not set
+func init() {
+	if gotifyURL == "" {
+		log.Fatalf("Please provide Gotify endpoint URL")
+	}
+	if !strings.HasSuffix(gotifyURL, "/message") {
+		gotifyURL = gotifyURL + "/message"
+	}
+	if gotifyToken == "" {
+		log.Fatalf("Please provide Gotify application token")
+	}
+	if listenHost == "" {
+		listenHost = "0.0.0.0"
+	}
+	if listenPort == "" {
+		listenPort = "31662"
+	}
+}
+
 // set up some structs to make things simpler
 
 // incoming TrueNAS request
@@ -91,7 +110,7 @@ func onMessageHandler(c *gin.Context) {
 		return
 	}
 
-	// print entire body to log (for debugging)
+	// print entire body to log (for development/debugging)
 	if enableDebug {
 		log.Printf("Received payload:\n\n%s", string(body))
 	}
