@@ -23,6 +23,7 @@ var (
 	listenHost    = os.Getenv("LISTEN_HOST")
 	listenPort    = os.Getenv("LISTEN_PORT")
 	enableMetrics = os.Getenv("PROMETHEUS_METRICS") == "1" // set to true if the env is set to 1
+	enableDebug   = os.Getenv("DEBUG_MODE") == "1"
 )
 
 // set up some structs to make things simpler
@@ -39,6 +40,7 @@ type GotifyPayload struct {
 }
 
 func main() {
+	// set gin into release mode
 	gin.SetMode(gin.ReleaseMode)
 
 	// set up the router "r"
@@ -67,39 +69,41 @@ func main() {
 	}
 }
 
-// Gin handler for both routes
+// Gin handler for all routes
 func onMessageHandler(c *gin.Context) {
 
 	// get the total time to handle a message (even on fail)
 	start := time.Now()
 	defer func() {
 		duration := time.Since(start).Seconds()
-		metrics.RequestDuration.Observe(duration)
+		metrics.RequestDuration.Observe(duration) // it's a histogram so use .Observe
 	}()
 
 	//increment the number of messages received
 	metrics.RequestsTotal.Inc()
 
-	// read the content of the alert
+	// read the content of the alert into "body"
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		log.Println("Error: Couldn't read request body:", err)
-		c.Status(http.StatusBadRequest) // return error to TrueNAS
-		metrics.RequestsFailedTotal.Inc()
+		c.Status(http.StatusBadRequest)   // return error to TrueNAS
+		metrics.RequestsFailedTotal.Inc() // increment number of failed requests
 		return
+	}
+
+	// print entire body to log (for debugging)
+	if enableDebug {
+		log.Printf("Received payload:\n\n%s", string(body))
 	}
 
 	// unmarshal alert body into "request" and check that request.Text exists
 	var request Request
 	if err := json.Unmarshal(body, &request); err != nil || request.Text == "" { // check if error or more importantly, missing text field
 		log.Println("Error: Request has invalid JSON or missing 'text' field:", err)
-		c.Status(http.StatusBadRequest) // also return 400 on error or missing text field
-		metrics.RequestsFailedTotal.Inc()
+		c.Status(http.StatusBadRequest)   // also return 400 on error or missing text field
+		metrics.RequestsFailedTotal.Inc() // and increment the error count
 		return
 	}
-
-	// print entire bdy to log (for testing at the monent, I'm looking for the severity)
-	log.Printf("Received payload:\n\n%s", string(body))
 
 	// extract notification title and message from alert
 	lines := strings.Split(request.Text, "\n")                  // split Text at newline
