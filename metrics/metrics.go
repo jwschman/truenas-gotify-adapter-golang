@@ -50,7 +50,7 @@ var (
 
 	RequestDuration = prometheus.NewHistogram(
 		prometheus.HistogramOpts{
-			Name:    "gotify_requests_duration_seconds",
+			Name:    "gotify_forwarder_gotify_sends_duration_seconds",
 			Help:    "Duration of handling incoming requests in seconds",
 			Buckets: prometheus.DefBuckets, // just use default buckets
 		},
@@ -58,7 +58,7 @@ var (
 
 	GotifySendDuration = prometheus.NewHistogram(
 		prometheus.HistogramOpts{
-			Name:    "gotify_gotify_send_duration_seconds",
+			Name:    "gotify_forwarder_send_duration_seconds",
 			Help:    "Duration of Gotify notification send operations in seconds.",
 			Buckets: prometheus.DefBuckets, // default buckets here as well
 		},
