@@ -128,6 +128,8 @@ func onMessageHandler(c *gin.Context) {
 	lines := strings.Split(request.Text, "\n")                  // split Text at newline
 	title := strings.TrimSpace(lines[0])                        // title is string 0 without whitespace
 	message := strings.TrimSpace(strings.Join(lines[1:], "\n")) // message is from string 1 without whitespace
+	// Trim previous alerts that may not have been cleared
+	message = trimPreviousAlerts(message) // this could be done on the above line instead, but this is just easier to read
 
 	// print title and message to console -- This could actually just go to a log instead but i'll do that later
 	fmt.Printf("========== %s ==========\n", title)
@@ -198,4 +200,15 @@ func sendGotifyMessage(payload GotifyPayload) (*http.Response, error) {
 	defer resp.Body.Close() // https://pkg.go.dev/net/http close those bodies
 
 	return resp, nil
+}
+
+// TrueNAS likes to send all the uncleared alerts in the message.
+// This will just take the message string and trim all the blank lines
+// and "Current Alerts"
+func trimPreviousAlerts(s string) string {
+	index := strings.Index(s, "Current alerts:")
+	if index == -1 {
+		return s
+	}
+	return s[:index]
 }
