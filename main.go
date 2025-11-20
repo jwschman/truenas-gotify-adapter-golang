@@ -202,13 +202,17 @@ func sendGotifyMessage(payload GotifyPayload) (*http.Response, error) {
 	return resp, nil
 }
 
-// TrueNAS likes to send all the uncleared alerts in the message.
-// This will just take the message string and trim all the blank lines
-// and "Current Alerts"
+// TrueNAS likes to send all the uncleared and cleared alerts in the message.
 func trimPreviousAlerts(s string) string {
-	index := strings.Index(s, "Current alerts:")
+	// check for "The following alert has been cleared:"
+	index := strings.Index(s, "\n\n\nThe following alert")
+	// if we didn't find that, check for "Current alerts:"
 	if index == -1 {
-		return s
+		index = strings.Index(s, "\n\n\nCurrent alerts:")
+		if index == -1 {
+			// if we didn't find either, just return the string
+			return s
+		}
 	}
 	return s[:index]
 }
