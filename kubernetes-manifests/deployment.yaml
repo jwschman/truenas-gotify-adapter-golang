@@ -34,3 +34,22 @@ spec:
           value: "1"
         - name: DEBUG_MODE
           value: "0"
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 31662
+          initialDelaySeconds: 5
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 31662
+          initialDelaySeconds: 5
+          periodSeconds: 10

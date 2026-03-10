@@ -13,11 +13,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Extract Docker image metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ secrets.DOCKER_USERNAME }}/truenas-gotify
+      - name: Read VERSION
+        id: version
+        run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -29,5 +27,6 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          annotations: ${{ steps.meta.outputs.annotations }}
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/truenas-gotify:${{ steps.version.outputs.version }}
+            ${{ secrets.DOCKER_USERNAME }}/truenas-gotify:latest

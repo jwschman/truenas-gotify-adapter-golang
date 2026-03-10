@@ -8,6 +8,15 @@ This program uses TrueNAS CORE's built-in Slack alert service to send notificati
 
 ✨ **Now with Prometheus /metrics!** ✨
 
+## Endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `POST` | `/` | Receive TrueNAS alert |
+| `POST` | `/message` | Receive TrueNAS alert (alternate path) |
+| `GET` | `/health` | Health check — returns 200 OK |
+| `GET` | `/metrics` | Prometheus metrics (only when `PROMETHEUS_METRICS=1`) |
+
 ## Setup
 
 ### 1: Generate Gotify Token
@@ -68,10 +77,6 @@ After that's input you can click **SEND TEST ALERT** and hopefully see that it w
 ![Gotify test alert](images/gotify-test-alert.png)
 
 That's it.  You're good to go 😎
-
-## TODO
-
-- Add tags to dockerhub images in github workflow
 
 ## About
 

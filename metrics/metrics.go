@@ -47,22 +47,6 @@ var (
 			Help: "Total number of notifications failed to send to Gotify",
 		},
 	)
-
-	RequestDuration = prometheus.NewHistogram(
-		prometheus.HistogramOpts{
-			Name:    "gotify_forwarder_gotify_sends_duration_seconds",
-			Help:    "Duration of handling incoming requests in seconds",
-			Buckets: prometheus.DefBuckets, // just use default buckets
-		},
-	)
-
-	GotifySendDuration = prometheus.NewHistogram(
-		prometheus.HistogramOpts{
-			Name:    "gotify_forwarder_send_duration_seconds",
-			Help:    "Duration of Gotify notification send operations in seconds.",
-			Buckets: prometheus.DefBuckets, // default buckets here as well
-		},
-	)
 )
 
 // Register all defined metrics
@@ -72,6 +56,4 @@ func Register() {
 	prometheus.MustRegister(RequestsFailedTotal)
 	prometheus.MustRegister(GotifySendsTotal)
 	prometheus.MustRegister(GotifySendsFailedTotal)
-	prometheus.MustRegister(GotifySendDuration)
-	prometheus.MustRegister(RequestDuration)
 }
